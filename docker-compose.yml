@@ -12,7 +12,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U posgtgres -d demo"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d demo"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -23,8 +23,6 @@ services:
         limits:
           cpus: '1'
           memory: 4G
-    networks:
-      - postgres
 
   pgadmin:
     container_name: pgadmin_container
@@ -43,7 +41,7 @@ services:
         limits:
           cpus: '0.5'
           memory: 1G
-    networks:
+    depends_on:
       - postgres
 
 networks:
