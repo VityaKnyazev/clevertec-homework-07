@@ -18,9 +18,7 @@ SELECT airport_code, airport_name AS airport, city FROM airports WHERE city = AN
 SELECT flight_id, flight_no, scheduled_departure, scheduled_arrival, departure_airport, arrival_airport, status, aircraft_code, actual_departure, actual_arrival FROM flights WHERE departure_airport = ANY(SELECT airport_code FROM airports WHERE city = 'Екатеринбург') AND arrival_airport=ANY(SELECT airport_code FROM airports WHERE city = 'Москва') AND (status='On Time' OR status='Scheduled' OR status='Delayed') ORDER BY scheduled_departure ASC LIMIT(1);
 
 -- 6. Вывести самый дешевый и дорогой билет и стоимость (в одном результирующем ответе).
-(SELECT ticket_no, SUM(amount) as total FROM ticket_flights GROUP BY ticket_no ORDER BY TOTAL DESC LIMIT(1)) UNION (SELECT ticket_no, SUM(amount) as total FROM ticket_flights GROUP BY ticket_no ORDER BY TOTAL ASC LIMIT(1));
--- OR
-SELECT tickets.ticket_no, tickets.book_ref, tickets.passenger_id, tickets.passenger_name, SUM(ticket_flights.amount) as ticket_total_amount FROM tickets INNER JOIN ticket_flights ON tickets.ticket_no=ticket_flights.ticket_no GROUP BY tickets.ticket_no HAVING SUM(ticket_flights.amount)=ALL(SELECT total FROM (SELECT ticket_no, SUM(amount) as total FROM ticket_flights GROUP BY ticket_no ORDER BY TOTAL DESC LIMIT(1)) AS t1) OR SUM(ticket_flights.amount)=ALL(SELECT total FROM (SELECT ticket_no, SUM(amount) as total FROM ticket_flights GROUP BY ticket_no ORDER BY TOTAL ASC LIMIT(1)) AS t2) ORDER BY ticket_total_amount, tickets.ticket_no;
+SELECT tickets.ticket_no, tickets.book_ref, tickets.passenger_id, tickets.passenger_name, SUM(ticket_flights.amount) as ticket_total_amount FROM tickets INNER JOIN ticket_flights ON tickets.ticket_no=ticket_flights.ticket_no GROUP BY tickets.ticket_no HAVING SUM(ticket_flights.amount)=ALL(SELECT MIN(total) FROM (SELECT ticket_no, SUM(amount) as total FROM ticket_flights GROUP BY ticket_no) AS t1) OR SUM(ticket_flights.amount)=ALL(SELECT MAX(total) FROM (SELECT ticket_no, SUM(amount) as total FROM ticket_flights GROUP BY ticket_no) AS t2) ORDER BY ticket_total_amount ASC, tickets.ticket_no ASC;
 
 /*
  * 7. Написать DDL таблицы Customers, должны быть поля 
@@ -81,31 +79,9 @@ DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS customers;
 
-
-
-aircraft code 319, 320, 321, 733, 763, 773, CN1, CR2, SU9 | 9 самолетов
-
-319 - 116, 320 - 140, 321 - 170, 733 - 130, 763 - 222, 773 - 402, CN1 - 12, CR2 - 50, SU9 - 97
-
-
-
- book_ref |       book_date        | total_amount
-----------+------------------------+--------------
- 3B54BB   | 2017-07-05 14:08:00+00 |   1204500.00
-
- 
-
-  ticket_no   | book_ref | passenger_id |  passenger_name  |                                contact_data
----------------+----------+--------------+------------------+-----------------------------------------------------------------------------
- 0005432537033 | 3B54BB   | 5368 241076  | DARYA TIKHONOVA  | {"email": "tikhonova-d.08031967@postgrespro.ru", "phone": "+70821922130"}
- 0005432537034 | 3B54BB   | 9994 168772  | TATYANA SOROKINA | {"phone": "+70510887624"}
- 0005432537035 | 3B54BB   | 1406 902284  | DMITRIY KUZMIN   | {"email": "dmitriykuzmin.01041984@postgrespro.ru", "phone": "+70814458211"}
-(3 rows)
-
-   ticket_no   | flight_id | fare_conditions |  amount
----------------+-----------+-----------------+-----------
- 0005432537033 |      6015 | Business        | 199300.00
- 0005432537033 |      7726 | Business        |  42100.00
- 0005432537033 |     18088 | Business        | 199300.00
- 0005432537033 |     30619 | Economy         |  15400.00
-(4 rows)
+-- 11. Написать свой кастомный запрос (rus + sql).
+/*
+ * Посчитать количество билетов на рейсы из Казани в Москву на которые доступно бронирование, где стоимость рейса больше 20 000, но меньшее 50 000, 
+ * отсортировать по стоимости и запланированной дате отбытия. Вывести информацию о рейсах, стоимости полета и количестве билетов на рейс.
+*/
+SELECT flights.flight_id, flights.flight_no, flights.scheduled_departure, flights.scheduled_arrival, flights.departure_airport, flights.arrival_airport, flights.status, flights.aircraft_code, flights.actual_departure, flights.actual_arrival, ticket_flights.amount AS flight_price, COUNT(ticket_flights.ticket_no) AS tickets_quantity FROM flights INNER JOIN ticket_flights ON flights.flight_id=ticket_flights.flight_id WHERE (ticket_flights.amount BETWEEN 20000 AND 50000) AND flights.departure_airport=ANY(SELECT airport_code FROM airports WHERE city = 'Казань') AND flights.arrival_airport=ANY(SELECT airport_code FROM airports WHERE city = 'Москва') AND flights.status='Scheduled' GROUP BY flights.flight_id, ticket_flights.amount ORDER BY ticket_flights.amount ASC, flights.scheduled_departure ASC;
