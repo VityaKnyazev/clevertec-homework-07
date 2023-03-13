@@ -18,6 +18,8 @@ SELECT airport_code, airport_name AS airport, city FROM airports WHERE city = AN
 SELECT flight_id, flight_no, scheduled_departure, scheduled_arrival, departure_airport, arrival_airport, status, aircraft_code, actual_departure, actual_arrival FROM flights WHERE departure_airport = ANY(SELECT airport_code FROM airports WHERE city = 'Екатеринбург') AND arrival_airport=ANY(SELECT airport_code FROM airports WHERE city = 'Москва') AND (status='On Time' OR status='Scheduled' OR status='Delayed') ORDER BY scheduled_departure ASC LIMIT(1);
 
 -- 6. Вывести самый дешевый и дорогой билет и стоимость (в одном результирующем ответе).
+(SELECT ticket_no, SUM(amount) as total FROM ticket_flights GROUP BY ticket_no ORDER BY TOTAL DESC LIMIT(1)) UNION (SELECT ticket_no, SUM(amount) as total FROM ticket_flights GROUP BY ticket_no ORDER BY TOTAL ASC LIMIT(1));
+-- OR все самые дешевые и самые дорогие
 SELECT tickets.ticket_no, tickets.book_ref, tickets.passenger_id, tickets.passenger_name, SUM(ticket_flights.amount) as ticket_total_amount FROM tickets INNER JOIN ticket_flights ON tickets.ticket_no=ticket_flights.ticket_no GROUP BY tickets.ticket_no HAVING SUM(ticket_flights.amount)=ALL(SELECT MIN(total) FROM (SELECT ticket_no, SUM(amount) as total FROM ticket_flights GROUP BY ticket_no) AS t1) OR SUM(ticket_flights.amount)=ALL(SELECT MAX(total) FROM (SELECT ticket_no, SUM(amount) as total FROM ticket_flights GROUP BY ticket_no) AS t2) ORDER BY ticket_total_amount ASC, tickets.ticket_no ASC;
 
 /*
