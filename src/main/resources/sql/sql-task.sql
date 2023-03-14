@@ -27,7 +27,7 @@ SELECT tickets.ticket_no, tickets.book_ref, tickets.passenger_id, tickets.passen
  * id, firstName, LastName, email, phone. Добавить ограничения на поля (constraints).
 */
 CREATE TABLE IF NOT EXISTS customers (
-id SERIAL NOT NULL,
+id BIGSERIAL NOT NULL,
 first_name CHARACTER VARYING(30) NOT NULL,
 last_name CHARACTER VARYING(40) NOT NULL,
 email CHARACTER VARYING(30) NOT NULL,
@@ -46,8 +46,8 @@ UNIQUE(phone)
  * Должен быть внешний ключ на таблицу customers + ограничения
 */
 CREATE TABLE IF NOT EXISTS orders(
-id SERIAL NOT NULL,
-customer_id INT NOT NULL,
+id BIGSERIAL NOT NULL,
+customer_id BIGINT NOT NULL,
 quantity NUMERIC(9, 3) NOT NULL,
 
 CHECK(quantity >= 0),
