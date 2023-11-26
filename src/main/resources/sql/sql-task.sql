@@ -152,3 +152,60 @@ HAVING SUM(ticket_flights.amount) = ALL(SELECT MIN(total)
                                         FROM (SELECT ticket_no, SUM(amount) as total
                                               FROM ticket_flights GROUP BY ticket_no) AS t2)
 ORDER BY ticket_total_amount ASC, tickets.ticket_no ASC;
+
+-- 14. 14.	Написать DDL таблицы Customers, должны быть поля
+-- id, firstName, LastName, email, phone.
+-- Добавить ограничения на поля (constraints)
+CREATE TABLE IF NOT EXISTS customers (
+    id BIGSERIAL NOT NULL,
+    first_name CHARACTER VARYING(30) NOT NULL,
+    last_name CHARACTER VARYING(40) NOT NULL,
+    email CHARACTER VARYING(30) NOT NULL,
+    phone CHARACTER VARYING(30) NOT NULL,
+
+    CHECK(email ~* '^[\w-_]{0,}@[a-z]+\.\w+$'),
+    CHECK(phone ~* '^\+375\d{9}$'),
+
+    PRIMARY KEY(id),
+    UNIQUE(email),
+    UNIQUE(phone)
+);
+
+--15.	Написать DDL таблицы Orders, должен быть
+-- id, customerId, quantity.
+-- Должен быть внешний ключ на таблицу customers + constraints
+CREATE TABLE IF NOT EXISTS orders(
+    id BIGSERIAL NOT NULL,
+    customer_id BIGINT NOT NULL,
+    quantity NUMERIC(9, 3) NOT NULL,
+
+    CHECK(quantity >= 0),
+
+    PRIMARY KEY(id),
+
+    CONSTRAINT fk_customer
+    FOREIGN KEY (customer_id)
+    REFERENCES customers(id)
+    ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+--16. Написать 5 insert в эти таблицы
+INSERT INTO customers(first_name, last_name, email, phone) VALUES('Alik', 'Skvartsov', 'hasimo@yandex.by', '+375295689654');
+INSERT INTO customers(first_name, last_name, email, phone) VALUES('Yana', 'Andreeva', 'yana@gmail.com', '+375445586932');
+INSERT INTO customers(first_name, last_name, email, phone) VALUES('Vladimir', 'Belokonev', 'konevbel@mail.ru', '+375334561473');
+INSERT INTO customers(first_name, last_name, email, phone) VALUES('Nikolay', 'Krasnov', 'kolya@tut.by', '+375297563216');
+INSERT INTO customers(first_name, last_name, email, phone) VALUES('Anton', 'Efremov', 'efrem@gmail.com', '+375251568452');
+
+INSERT INTO orders(customer_id, quantity) VALUES(1, 6);
+INSERT INTO orders(customer_id, quantity) VALUES(2, 9.254);
+INSERT INTO orders(customer_id, quantity) VALUES(3, 1.2);
+INSERT INTO orders(customer_id, quantity) VALUES(4, 125);
+INSERT INTO orders(customer_id, quantity) VALUES(5, 312.56);
+
+--17.	Удалить таблицы
+ALTER TABLE IF EXISTS orders DROP CONSTRAINT fk_customer;
+DROP TABLE IF EXISTS customers;
+DROP TABLE IF EXISTS orders;
+-- OR
+DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS customers;
